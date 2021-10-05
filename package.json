@@ -1,0 +1,20 @@
+{
+  "name": "order-book-ui",
+  "version": "0.0.1",
+  "description": "Technical test",
+  "license": "BSD-Protection",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "yarn build:orderbook && yarn workspace @base/client dev",
+    "build": "yarn build:orderbook && yarn workspace @base/client build",
+    "dev:orderbook": "yarn workspace @base/orderbook dev",
+    "build:orderbook": "yarn workspace @base/orderbook build",
+    "add:client": "yarn workspace @base/client add",
+    "upgrade:client": "yarn workspace @base/client upgrade",
+    "remove:client": "yarn workspace @base/client remove",
+    "node_modules:remove": "rm -rf node_modules && rm -rf ./packages/client/node_modules && rm -rf ./packages/orderbook/node_modules"
+  }
+}
