@@ -27,5 +27,8 @@
   },
   "peerDependencies": {
     "styled-components": "^5.3.1"
+  },
+  "dependencies": {
+    "lodash.throttle": "^4.1.1"
   }
 }

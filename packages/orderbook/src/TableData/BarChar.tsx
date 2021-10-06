@@ -4,8 +4,9 @@ interface IBar {
   customWidth: number
 }
 
-const _Bar = styled.div<IBar>`
+const _Bar = styled.td<IBar>`
   position: absolute;
+  display: block;
   right: unset;
   bottom: 0;
   left: 0;

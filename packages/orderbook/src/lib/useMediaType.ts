@@ -1,3 +1,4 @@
+// custom made hook for knowing what's the current mediaType of the browser
 import { useEffect, useState } from 'react'
 
 interface Breakpoints {

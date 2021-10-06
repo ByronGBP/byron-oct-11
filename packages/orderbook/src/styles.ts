@@ -107,6 +107,10 @@ export const OrderBookStyled = styled.div`
 
     @media (min-width: 768px) { 
       grid-area: 3 / 1 / span 1 / span 2;
+
+      &:nth-of-type(2) {
+        grid-area: 4 / 1 / span 1 / span 2;
+      }
     }
   }
 `

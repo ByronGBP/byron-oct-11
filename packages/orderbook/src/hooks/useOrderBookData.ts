@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react"
-import { TableData } from "@/types"
+import { useCallback, useEffect, useState } from 'react'
+import { useSession, ProducId } from '.'
+import { TableData } from '../types'
 
 const MOCK_DATA: TableData[] = [
   {
@@ -89,13 +90,37 @@ const MOCK_DATA: TableData[] = [
   },
 ]
 
+const handleOpen = (session, e) => {
+  console.log(session, e)
 
-export const useOrderBookData = (): [TableData[]] => {
+  session.send(JSON.stringify({ event: 'subscribe', feed: 'book_ui_1', product_ids: ['PI_XBTUSD'] }))
+}
+
+type OrderBookHook = {
+  data: TableData[],
+  reconnect: Function,
+  toggleFeed: Function,
+  isOpen: boolean | undefined
+}
+
+export const useOrderBookData = (): OrderBookHook  => {
   const [data, setData] = useState<TableData[]>([])
+  const { connect, sendMessage, isOpen } = useSession('wss://www.cryptofacilities.com/ws/v1', { onOpen: handleOpen })
+  const [, setToggle] = useState(0)
+
+  const toggleFeed = useCallback(() => {
+    setToggle((prev) => {
+      const [from, to]: [ProducId, ProducId] = (prev + 1) % 2 === 0 ? ['PI_ETHUSD', 'PI_XBTUSD'] : ['PI_XBTUSD','PI_ETHUSD' ]
+      sendMessage({ event: 'unsubscribe', feed: 'book_ui_1', product_ids: [from] })
+      sendMessage({ event: 'subscribe', feed: 'book_ui_1', product_ids: [to] })
+
+      return prev + 1
+    })
+  }, [sendMessage])
 
   useEffect(() => {
     setData(MOCK_DATA)
   }, [])
 
-  return [data]
+  return { data, reconnect: connect, toggleFeed, isOpen }
 }

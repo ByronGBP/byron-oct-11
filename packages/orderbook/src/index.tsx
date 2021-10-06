@@ -4,7 +4,7 @@ import { useOrderBookData } from './hooks'
 import TableData from "./TableData"
 
 const OrderBook = () => {
-  const [data] = useOrderBookData()
+  const { data, reconnect, toggleFeed } = useOrderBookData()
 
   return data.length ?
     <OrderBookStyled>
@@ -15,7 +15,8 @@ const OrderBook = () => {
       <TableData data={data}/>
       <p className='text-mobile'>Spread 17.0 (0.05%)</p>
       <TableData data={data} reverse/>
-      <button>Toggle Feed</button>
+      <button onClick={() => toggleFeed()}>Toggle Feed</button>
+      <button onClick={() => reconnect()}>Reconnect</button>
     </OrderBookStyled> : <></>
 }
 
