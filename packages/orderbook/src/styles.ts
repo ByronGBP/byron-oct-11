@@ -17,6 +17,10 @@ export const getButtonStyles = () => css`
   color: ${theme.colors.white};
   border-radius: 5px;
   font-weight: bold;
+
+  &:disabled {
+    opacity: .4;
+  }
 `
 
 export const OrderBookStyled = styled.div`

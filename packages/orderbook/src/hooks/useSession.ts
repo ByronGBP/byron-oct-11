@@ -25,18 +25,21 @@ type SessionHook = {
   connect: Function
   close: Function
   sendMessage : MessageHandler
-  isOpen: boolean | undefined
+  isOpen: boolean
 }
 
-const handlerCreatorBind = (session, event, fn) => {
+const handlerCreatorBind = (session, event, fn, forceRender) => {
   if (!session) return
   const cb = (e) => {
     console.log('happend -> ', event)
     fn && fn(session, e)
+    event !== 'onmessage' && forceRender((old) => (old + 1) % 2)
   }
 
-  session[event] = event === 'onmessage' ? throttle(cb, 5000) : cb
+  session[event] = cb
 }
+
+// event === 'onmessage' ? throttle(cb, 5000) :
 
 const handlerCreatorUnbind = (session, event) => {
   if (!session) return
@@ -55,13 +58,14 @@ const handleUserLeavePage = (fb) => {
 
 export const useSession = ( url: string, { onOpen, onMessage, onError, onClose }: IOptions): SessionHook => {
   const session = useRef<null | WebSocket>(null)
+  const [, forceRender] = useState(0)
 
   const bindEvents = useCallback((session) => {
     console.log('binding')
-    handlerCreatorBind(session, 'onopen', onOpen)
-    handlerCreatorBind(session, 'onmessage', onMessage)
-    handlerCreatorBind(session, 'onerror', onError)
-    handlerCreatorBind(session, 'onclose', onClose)
+    handlerCreatorBind(session, 'onopen', onOpen, forceRender)
+    handlerCreatorBind(session, 'onmessage', onMessage, forceRender)
+    handlerCreatorBind(session, 'onerror', onError, forceRender)
+    handlerCreatorBind(session, 'onclose', onClose, forceRender)
   }, [])
 
   const unbindEvents = useCallback((session) => {
@@ -104,5 +108,5 @@ export const useSession = ( url: string, { onOpen, onMessage, onError, onClose }
     }
   }, [])
 
-  return { connect, sendMessage, close, isOpen: session.current?.readyState === 1 }
+  return { connect, sendMessage, close, isOpen: session.current ? session.current?.OPEN === 1 : false }
 }

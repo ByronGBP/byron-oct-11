@@ -78,7 +78,7 @@ const formattedNumber = (num) => num.toLocaleString('en-US', { minimumFractionDi
 const ORDER = ['total', 'size', 'price']
 const ORDER_REVERSE = ['price', 'size', 'total']
 
-const getRows = (data, reverse, isMobile) => {
+const getRows = (data, reverse, isMobile, maxValue) => {
   const _order = reverse || isMobile ? [...ORDER_REVERSE] : [...ORDER]
 
   const BodyRows = data.map((item, idx) => {
@@ -87,7 +87,7 @@ const getRows = (data, reverse, isMobile) => {
         {_order.map((key, idx) => {
           return <td key={reverse+key+idx} className={key + ' ' + reverse}>{formattedNumber(item[key] ?? 123)}</td>
         })}
-        <BarChar reverse={reverse} width={item.total * 100 / 333306} />
+        <BarChar reverse={reverse} width={item.total * 100 / maxValue} />
       </tr>
     )
   })
@@ -100,12 +100,13 @@ const getRows = (data, reverse, isMobile) => {
 interface ITableData {
   data: TableData[]
   reverse?: boolean
+  maxValue: Number
 }
 
-const TableData = memo<ITableData>(({ data, reverse = false }) => {
+const TableData = memo<ITableData>(({ data, reverse = false, maxValue }) => {
   const mediaType = useMediaType()
 
-  const [HeadRows, BodyRows] = useMemo(() => getRows(data, reverse, mediaType === 'mobile'), [data, reverse, mediaType === 'mobile'])
+  const [HeadRows, BodyRows] = useMemo(() => getRows(data, reverse, mediaType === 'mobile', maxValue), [data, reverse, mediaType === 'mobile', maxValue])
 
   return (
   <_TableData className={reverse ? 'reverse' : ''}>
