@@ -5,8 +5,12 @@ import { useMediaType } from '../lib'
 import { TableData } from '../types'
 import { theme } from '../styles' 
 
-import BarChar from './BarChar'
+import { BarChar, TableDataChar } from './BarChar'
 
+
+const TableDataWrapper = styled.div`
+  position: relative;
+`
 
 const _TableData = styled.table`
   border-collapse: separate;
@@ -51,7 +55,8 @@ const _TableData = styled.table`
 
   tbody {
     tr {
-      position: relative;
+      position:relative;
+      transform:scale(1, 1);
     }
   }
 
@@ -80,43 +85,54 @@ const ORDER_REVERSE = ['price', 'size', 'total']
 
 const getRows = (data, reverse, isMobile, maxValue) => {
   const _order = reverse || isMobile ? [...ORDER_REVERSE] : [...ORDER]
+  const Bars: JSX.Element[] = []
 
   const BodyRows = data.map((item, idx) => {
+    Bars.push(<BarChar key={'bar' + idx} position={idx} reverse={reverse} width={item.total * 100 / maxValue} />)
     return (
       <tr key={'body'+idx}>
         {_order.map((key, idx) => {
           return <td key={reverse+key+idx} className={key + ' ' + reverse + ' data'}>{formattedNumber(item[key] ?? 123)}</td>
         })}
-        <BarChar reverse={reverse} width={item.total * 100 / maxValue} />
       </tr>
     )
   })
 
   const HeadRows = <tr>{_order.map((item, idx) => <th key={idx}>{item}</th>)}</tr>
 
-  return [HeadRows, BodyRows]
+  return [HeadRows, BodyRows, Bars]
 }
 
 interface ITableData {
   data: TableData[]
   reverse?: boolean
   maxValue: Number
+  className?: string
 }
 
-const TableData = memo<ITableData>(({ data, reverse = false, maxValue }) => {
+
+// Error tr dosn't apply position relative on all browser
+// https://github.com/w3c/csswg-drafts/issues/1899
+// Patch: create a separate BarChar from the table
+const TableData = memo<ITableData>(({ className = '', data, reverse = false, maxValue }) => {
   const mediaType = useMediaType()
 
-  const [HeadRows, BodyRows] = useMemo(() => getRows(data, reverse, mediaType === 'mobile', maxValue), [data, reverse, mediaType === 'mobile', maxValue])
+  const [HeadRows, BodyRows, Bars] = useMemo(() => getRows(data, reverse, mediaType === 'mobile', maxValue), [data, reverse, mediaType === 'mobile', maxValue])
 
   return (
-  <_TableData className={reverse ? 'reverse' : ''}>
-    <thead>
-      {HeadRows}
-    </thead>
-    <tbody>
-      {BodyRows}
-    </tbody>
-  </_TableData>
+    <TableDataWrapper className={'table ' + className}>
+      <_TableData className={reverse ? 'reverse' : ''}>
+        <thead>
+          {HeadRows}
+        </thead>
+        <tbody>
+          {BodyRows}
+        </tbody>
+      </_TableData>
+      <TableDataChar className={reverse ? 'reverse' : ''}>
+        {Bars}
+      </TableDataChar>
+    </TableDataWrapper>
   )
 })
 

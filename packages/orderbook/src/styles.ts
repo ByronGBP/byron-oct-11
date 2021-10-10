@@ -33,7 +33,7 @@ export const OrderBookStyled = styled.div`
   background-color: ${theme.colors.background};
   transition: opacity 300ms ease;
 
-  table, .toggle-feed, .title {
+  .table, .toggle-feed, .title {
     transition: opacity 300ms ease;
   }
 
@@ -103,19 +103,19 @@ export const OrderBookStyled = styled.div`
     }
   }
 
-  table {
+  .table {
     font-size: 15px;
     grid-row: 4 / span 1;
     grid-column:  span 1;
 
-    &:nth-of-type(2) {
+    &.table-second {
       grid-row: 2 / span 1;
     }
 
     @media (min-width: 768px) { 
       grid-row: 2 / span 1;
 
-      &:nth-of-type(2) {
+      &.table-second {
         grid-row: 2 / span 1;
       }
     }

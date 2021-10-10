@@ -15,7 +15,7 @@ const OrderBook = () => {
       </div>
       <TableData maxValue={maxValue} data={bids}/>
       <p className='text-mobile'>{spreadValue}</p>
-      <TableData maxValue={maxValue} data={asks} reverse/>
+      <TableData className='table-second' maxValue={maxValue} data={asks} reverse/>
       <button className='toggle-feed' disabled={!isWSOpen || isLoading} onClick={() => toggleFeed()}>Toggle Feed</button>
       <ButtonReconnect disabled={isWSOpen} onClick={() => reconnect()}>Reconnect</ButtonReconnect>
     </OrderBookStyled> : <></>
