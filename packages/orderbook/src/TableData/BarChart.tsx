@@ -30,7 +30,7 @@ const _Bar = styled(motion.div)<IBar>`
   }
 `
 
-const _TableDataChar = styled.div`
+const _TableDataChart = styled.div`
   position: absolute;
   top: 0;
   left: 0;
@@ -56,12 +56,12 @@ const transition = {
   ease: [.25, .1, .25, 1]
 }
 
-export const BarChar = ({ reverse, className = '', width, position }) => {
+export const BarChart = ({ reverse, className = '', width, position }) => {
   return <_Bar initial={{ width: '0%' }} transition={transition} animate={{ width: width + '%' }} className={`bar ${className} ${reverse ? 'reverse' : ''}`} customWidth={Math.round(width)} position={position}></_Bar>
 }
 
-export const TableDataChar = ({ className, children }) => {
-  return <_TableDataChar className={className}>
+export const TableDataChart = ({ className, children }) => {
+  return <_TableDataChart className={className}>
     {children}
-  </_TableDataChar>
+  </_TableDataChart>
 }

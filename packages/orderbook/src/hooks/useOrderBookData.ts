@@ -91,6 +91,9 @@ const MOCK_DATA: TableData[] = [
   },
 ]
 
+// [price, size]
+type RawData = [number, number]
+
 type OrderBookData = { 
   asks: TableData[], 
   bids: TableData[], 
@@ -104,6 +107,7 @@ type OrderBookHook = {
   toggleFeed: Function,
   isWSOpen: boolean
   isLoading: boolean
+  currentAsset: 'BTC' | 'ETH'
 }
 
 interface IBaseData {
@@ -118,16 +122,17 @@ type OrderBookState = {
 }
 
 type Action =
- | { type: 'message', data: [TableData[], TableData[]] }
- | { type: 'snapshot', data: [TableData[], TableData[]] }
+ | { type: 'message', data: [RawData[], RawData[]] }
+ | { type: 'snapshot', data: [RawData[], RawData[]] }
  | { type: 'reset' }
  | { type: 'failure' }
 
-const initialState: OrderBookState = { data: [{}, {}], dataParsed: [[], [], ''], maxValue: 0, isLoading: true };
+ const InitialData: BaseData = [{}, {}]
+const initialState: OrderBookState = { data: InitialData, dataParsed: [[], [], ''], maxValue: 0, isLoading: true };
 
 const formattedNumber = (num) => num.toLocaleString('en-US', { minimumFractionDigits: 2 })
 
-const parseData = (data, sortDirection = 0): [TableData[], number] => {
+const parseData = (data: IBaseData, sortDirection = 0): [TableData[], number] => {
   let totalSize = 0
   const sortedData = Object.keys(data).sort((a,b) => sortDirection ? Number(a) - Number(b) : Number(b) - Number(a) ).slice(0, 25)
   const parsedData = sortedData.reduce((acc: TableData[], keyPrice): TableData[] => {
@@ -140,25 +145,26 @@ const parseData = (data, sortDirection = 0): [TableData[], number] => {
   return [parsedData, totalSize]
 }
 
-// [price, size]
+const getSpread = (firstNunmber: number, secondNumber: number) => {
+  const maxNum = Math.max(firstNunmber, secondNumber)
+  const minNum = Math.min(firstNunmber, secondNumber)
+  const spreadNum = maxNum - minNum
+  return `Spread  ${formattedNumber(spreadNum)} (${(spreadNum *  100 / maxNum).toFixed(2)})%`
+}
+
 const getParsedData = (data: BaseData): [TableData[], TableData[], number, string] => {
   const isMobile = window.innerWidth < 756
   const [bids, asks] = data
 
   const [parsedBids, totalBids] = parseData(bids)
   const [parsedAsks, totalAsks] = parseData(asks, 1)
-  
-  const maxNum = Math.max(parsedBids[0].price, parsedAsks[0].price)
-  const minNum = Math.min(parsedBids[0].price, parsedAsks[0].price)
-  const spreadNum = maxNum - minNum
-  const spread =`Spread  ${formattedNumber(spreadNum)} (${(spreadNum *  100 / maxNum).toFixed(2)})%`
+  const spread = getSpread(parsedBids[0].price, parsedAsks[0].price)
+
 
   return [parsedBids, isMobile ? parsedAsks.reverse() : parsedAsks, Math.max(totalAsks, totalBids), spread]
 }
 
-const InitialData = [{}, {}]
-
-const checkBaseWithData = (base, data) => {
+const checkBaseWithData = (base: IBaseData, data: RawData[]): IBaseData => {
   const newBase = { ...base }
   for (let idx = 0; idx < data.length; idx++) {
     const item = data[idx]
@@ -173,7 +179,7 @@ const checkBaseWithData = (base, data) => {
   return newBase
 }
 
-const getBaseData = (newData, baseData = InitialData): BaseData => {
+const getBaseData = (newData: [RawData[], RawData[]], baseData = InitialData): BaseData => {
   const [bids, asks] = newData
   const [bidsBase, asksBase] = baseData
 
@@ -205,13 +211,19 @@ let isSaveToThrottled = false
 
 // to patch bug: When it toggles coins the last throttled function still running once
 let currentCurrency = ''
+const SWAPPER = {
+  'PI_XBTUSD': 'BTC',
+  'PI_ETHUSD': 'ETH'
+}
 
 export const useOrderBookData = (): OrderBookHook  => {
+  const [currentAsset, setAsset] = useState<'BTC' | 'ETH'>('BTC')
   const [state, dispatch] = useReducer(reducer, initialState)
   const [, setToggle] = useState(0)
 
   const handleOpen = (session) => {
     currentCurrency = currentCurrency ? currentCurrency : 'PI_XBTUSD'
+    setAsset(SWAPPER[currentCurrency])
     session.send(JSON.stringify({ event: 'subscribe', feed: 'book_ui_1', product_ids: [currentCurrency] }))
   }
 
@@ -243,6 +255,7 @@ export const useOrderBookData = (): OrderBookHook  => {
       
       currentCurrency = to
       isSaveToThrottled = false
+      setAsset(SWAPPER[currentCurrency])
       dispatch({ type: 'reset' })
 
       sendMessage({ event: 'subscribe', feed: 'book_ui_1', product_ids: [to] })
@@ -251,5 +264,5 @@ export const useOrderBookData = (): OrderBookHook  => {
     })
   }, [sendMessage])
 
-  return { data: { bids: state.dataParsed[0], asks: state.dataParsed[1], maxValue: state.maxValue, spreadValue: state.dataParsed[2] }, reconnect: connect, toggleFeed, isWSOpen: isOpen, isLoading: state.isLoading  }
+  return { data: { bids: state.dataParsed[0], asks: state.dataParsed[1], maxValue: state.maxValue, spreadValue: state.dataParsed[2] }, reconnect: connect, toggleFeed, isWSOpen: isOpen, isLoading: state.isLoading, currentAsset }
 }

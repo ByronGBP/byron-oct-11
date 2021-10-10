@@ -72,7 +72,6 @@ export const OrderBookStyled = styled.div`
       }
     }
 
-
     h2, span {
       font-size: 15px;
       color: ${theme.colors.white};

@@ -5,7 +5,7 @@ import { useMediaType } from '../lib'
 import { TableData } from '../types'
 import { theme } from '../styles' 
 
-import { BarChar, TableDataChar } from './BarChar'
+import { BarChart, TableDataChart } from './BarChart'
 
 
 const TableDataWrapper = styled.div`
@@ -49,7 +49,7 @@ const _TableData = styled.table`
     padding: 5px 30px;
 
     @media (min-width: 768px) { 
-      padding: 5px 35px;
+      padding: 5px 55px;
     }
   }
 
@@ -88,7 +88,7 @@ const getRows = (data, reverse, isMobile, maxValue) => {
   const Bars: JSX.Element[] = []
 
   const BodyRows = data.map((item, idx) => {
-    Bars.push(<BarChar key={'bar' + idx} position={idx} reverse={reverse} width={item.total * 100 / maxValue} />)
+    Bars.push(<BarChart key={'bar' + idx} position={idx} reverse={reverse} width={item.total * 100 / maxValue} />)
     return (
       <tr key={'body'+idx}>
         {_order.map((key, idx) => {
@@ -113,7 +113,7 @@ interface ITableData {
 
 // Error tr dosn't apply position relative on all browser
 // https://github.com/w3c/csswg-drafts/issues/1899
-// Patch: create a separate BarChar from the table
+// Patch: create a separate BarChart from the table
 const TableData = memo<ITableData>(({ className = '', data, reverse = false, maxValue }) => {
   const mediaType = useMediaType()
 
@@ -129,9 +129,9 @@ const TableData = memo<ITableData>(({ className = '', data, reverse = false, max
           {BodyRows}
         </tbody>
       </_TableData>
-      <TableDataChar className={reverse ? 'reverse' : ''}>
+      <TableDataChart className={reverse ? 'reverse' : ''}>
         {Bars}
-      </TableDataChar>
+      </TableDataChart>
     </TableDataWrapper>
   )
 })
