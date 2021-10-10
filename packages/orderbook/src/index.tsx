@@ -1,23 +1,23 @@
-import { OrderBookStyled } from "./styles"
+import { OrderBookStyled, ButtonReconnect } from './styles'
 import { useOrderBookData } from './hooks'
 
 import TableData from "./TableData"
 
 const OrderBook = () => {
-  const { data, reconnect, toggleFeed, isOpen } = useOrderBookData()
-  const { bids, asks, maxValue } = data
+  const { data, reconnect, toggleFeed, isWSOpen, isLoading } = useOrderBookData()
+  const { bids, asks, maxValue, spreadValue } = data
 
   return asks.length || bids.length ?
-    <OrderBookStyled>
+    <OrderBookStyled className={isLoading ? 'loading' : !isWSOpen ? 'ws-close' : ''}>
       <div className='title'>
         <h2>Order book</h2>
-        <span>Spread 17.0 (0.05%)</span>
+        <span>{spreadValue}</span>
       </div>
       <TableData maxValue={maxValue} data={bids}/>
-      <p className='text-mobile'>Spread 17.0 (0.05%)</p>
+      <p className='text-mobile'>{spreadValue}</p>
       <TableData maxValue={maxValue} data={asks} reverse/>
-      <button disabled={!isOpen} onClick={() => toggleFeed()}>Toggle Feed</button>
-      <button disabled={isOpen} onClick={() => reconnect()}>Reconnect</button>
+      <button className='toggle-feed' disabled={!isWSOpen || isLoading} onClick={() => toggleFeed()}>Toggle Feed</button>
+      <ButtonReconnect disabled={isWSOpen} onClick={() => reconnect()}>Reconnect</ButtonReconnect>
     </OrderBookStyled> : <></>
 }
 

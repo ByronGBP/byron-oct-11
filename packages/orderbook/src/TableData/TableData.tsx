@@ -39,7 +39,7 @@ const _TableData = styled.table`
   }
 
   
-  td, th {
+  td.data, th {
     font-size: 14px;
     font-weight: bold;
     padding: 5px 30px;
@@ -85,7 +85,7 @@ const getRows = (data, reverse, isMobile, maxValue) => {
     return (
       <tr key={'body'+idx}>
         {_order.map((key, idx) => {
-          return <td key={reverse+key+idx} className={key + ' ' + reverse}>{formattedNumber(item[key] ?? 123)}</td>
+          return <td key={reverse+key+idx} className={key + ' ' + reverse + ' data'}>{formattedNumber(item[key] ?? 123)}</td>
         })}
         <BarChar reverse={reverse} width={item.total * 100 / maxValue} />
       </tr>

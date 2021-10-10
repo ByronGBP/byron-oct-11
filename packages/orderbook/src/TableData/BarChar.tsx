@@ -31,7 +31,7 @@ const _Bar = styled.td<IBar>`
 `
 
 const BarChar = ({ reverse, className = '', width }) => {
-  return <_Bar className={`${className} ${reverse ? 'reverse' : ''}`} customWidth={width}></_Bar>
+  return <_Bar className={`${className} ${reverse ? 'reverse' : ''}`} customWidth={Math.round(width)}></_Bar>
 }
 
 export default BarChar

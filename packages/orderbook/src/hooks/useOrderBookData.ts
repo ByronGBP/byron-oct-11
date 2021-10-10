@@ -1,6 +1,7 @@
 import { useCallback, useReducer, useState } from 'react'
 import { useSession, ProducId } from '.'
 import { TableData } from '../types'
+import throttle from 'lodash.throttle'
 
 const MOCK_DATA: TableData[] = [
   {
@@ -90,21 +91,19 @@ const MOCK_DATA: TableData[] = [
   },
 ]
 
-const handleOpen = (session) => {
-  session.send(JSON.stringify({ event: 'subscribe', feed: 'book_ui_1', product_ids: ['PI_XBTUSD'] }))
-}
-
 type OrderBookData = { 
   asks: TableData[], 
   bids: TableData[], 
-  maxValue: Number 
+  maxValue: Number
+  spreadValue: string
 }
 
 type OrderBookHook = {
   data: OrderBookData,
   reconnect: Function,
   toggleFeed: Function,
-  isOpen: boolean
+  isWSOpen: boolean
+  isLoading: boolean
 }
 
 interface IBaseData {
@@ -113,8 +112,9 @@ interface IBaseData {
 type BaseData = [IBaseData, IBaseData]
 type OrderBookState = {
   data: BaseData
-  dataParsed: [TableData[], TableData[]]
+  dataParsed: [TableData[], TableData[], string]
   maxValue: Number
+  isLoading: boolean
 }
 
 type Action =
@@ -123,32 +123,37 @@ type Action =
  | { type: 'reset' }
  | { type: 'failure' }
 
-const initialState: OrderBookState = { data: [{}, {}], dataParsed: [[], []], maxValue: 0 };
+const initialState: OrderBookState = { data: [{}, {}], dataParsed: [[], [], ''], maxValue: 0, isLoading: true };
 
+const formattedNumber = (num) => num.toLocaleString('en-US', { minimumFractionDigits: 2 })
+
+const parseData = (data, sortDirection = 0): [TableData[], number] => {
+  let totalSize = 0
+  const sortedData = Object.keys(data).sort((a,b) => sortDirection ? Number(a) - Number(b) : Number(b) - Number(a) ).slice(0, 25)
+  const parsedData = sortedData.reduce((acc: TableData[], keyPrice): TableData[] => {
+    const price = Number(keyPrice)
+    const size = Number(data[price])
+    totalSize += size
+    return  [...acc, { total: totalSize, size, price }]
+  } ,[])
+
+  return [parsedData, totalSize]
+}
 
 // [price, size]
-const parseBaseData = (data: BaseData): [TableData[], TableData[], number] => {
+const getParsedData = (data: BaseData): [TableData[], TableData[], number, string] => {
+  const isMobile = window.innerWidth < 756
   const [bids, asks] = data
 
-  let totalBids = 0
-  const sortedBids = Object.keys(bids).sort((a,b) => Number(b) - Number(a)).slice(0, 25)
-  const parsedBids = sortedBids.reduce((acc: TableData[], keyPrice): TableData[] => {
-    const price = Number(keyPrice)
-    const size = Number(bids[price])
-    totalBids += size
-    return  [...acc, { total: totalBids, size, price }]
-  } ,[])
+  const [parsedBids, totalBids] = parseData(bids)
+  const [parsedAsks, totalAsks] = parseData(asks, 1)
+  
+  const maxNum = Math.max(parsedBids[0].price, parsedAsks[0].price)
+  const minNum = Math.min(parsedBids[0].price, parsedAsks[0].price)
+  const spreadNum = maxNum - minNum
+  const spread =`Spread  ${formattedNumber(spreadNum)} (${(spreadNum *  100 / maxNum).toFixed(2)})%`
 
-  let totalAsks = 0
-  const sortedAsks = Object.keys(asks).sort((a,b) => Number(a) - Number(b)).slice(0, 25)
-  const parsedAsks = sortedAsks.reduce((acc: TableData[], keyPrice): TableData[] => {
-    const price = Number(keyPrice)
-    const size = Number(asks[price])
-    totalAsks += size
-    return  [...acc, { total: totalAsks, size, price }]
-  } ,[])
-
-  return [parsedBids, parsedAsks, Math.max(totalAsks, totalBids)]
+  return [parsedBids, isMobile ? parsedAsks.reverse() : parsedAsks, Math.max(totalAsks, totalBids), spread]
 }
 
 const InitialData = [{}, {}]
@@ -179,34 +184,53 @@ function reducer(state: OrderBookState, action: Action): OrderBookState {
   switch (action.type) {
     case 'snapshot': {
       const baseData = getBaseData(action.data)
-      const [newBids, newAsks, maxValue] = parseBaseData(baseData)
+      const [newBids, newAsks, maxValue, spreadValue] = getParsedData(baseData)
 
-      return { data: baseData, dataParsed: [newBids, newAsks], maxValue }
+      return { data: baseData, dataParsed: [newBids, newAsks, spreadValue], maxValue, isLoading: false }
     }
     case 'message':
       const baseData = getBaseData(action.data, state.data)
 
-      const [newBids, newAsks, maxValue] = parseBaseData(baseData)
-      return { data: baseData, dataParsed: [newBids, newAsks], maxValue }
+      const [newBids, newAsks, maxValue, spreadValue] = getParsedData(baseData)
+      return { ...state, data: baseData, dataParsed: [newBids, newAsks, spreadValue], maxValue }
     case 'reset':
-      return initialState
+      return { ...state, isLoading: true }
     default:
       throw new Error();
   }
 }
 
+// to patch bug: When it toggles coins, it sends 1 duplicate message
+let isSaveToThrottled = false
+
+// to patch bug: When it toggles coins the last throttled function still running once
+let currentCurrency = ''
+
 export const useOrderBookData = (): OrderBookHook  => {
   const [state, dispatch] = useReducer(reducer, initialState)
   const [, setToggle] = useState(0)
+
+  const handleOpen = (session) => {
+    currentCurrency = currentCurrency ? currentCurrency : 'PI_XBTUSD'
+    session.send(JSON.stringify({ event: 'subscribe', feed: 'book_ui_1', product_ids: [currentCurrency] }))
+  }
 
   const handleMessage = (s, e) => {
     const message = JSON.parse(e.data)
 
     if (message.feed?.includes('snapshot')) {
+      isSaveToThrottled = true
       dispatch({ type: 'snapshot', data: [message.bids, message.asks] })
-    } else if (typeof message.product_id === 'string') {
-      console.log(message)
-      // dispatch({ type: 'message', data: [message.bids, message.asks] })
+    } else if (isSaveToThrottled && typeof message.product_id === 'string') {
+      const cb = throttle((e) => {
+        console.log('happend throttle')
+        const message = JSON.parse(e.data)
+        if (typeof message.product_id === 'string' && message.product_id === currentCurrency) {
+          dispatch({ type: 'message', data: [message.bids, message.asks] })
+        }
+      }, 5000)
+
+      s.onmessage = cb
     }
   }
 
@@ -215,7 +239,10 @@ export const useOrderBookData = (): OrderBookHook  => {
   const toggleFeed = useCallback(() => {
     setToggle((prev) => {
       const [from, to]: [ProducId, ProducId] = (prev + 1) % 2 === 0 ? ['PI_ETHUSD', 'PI_XBTUSD'] : ['PI_XBTUSD','PI_ETHUSD' ]
-      sendMessage({ event: 'unsubscribe', feed: 'book_ui_1', product_ids: [from] })
+      sendMessage({ event: 'unsubscribe', feed: 'book_ui_1', product_ids: [from] }, true)
+      
+      currentCurrency = to
+      isSaveToThrottled = false
       dispatch({ type: 'reset' })
 
       sendMessage({ event: 'subscribe', feed: 'book_ui_1', product_ids: [to] })
@@ -224,5 +251,5 @@ export const useOrderBookData = (): OrderBookHook  => {
     })
   }, [sendMessage])
 
-  return { data: { bids: state.dataParsed[0], asks: state.dataParsed[1], maxValue: state.maxValue }, reconnect: connect, toggleFeed, isOpen  }
+  return { data: { bids: state.dataParsed[0], asks: state.dataParsed[1], maxValue: state.maxValue, spreadValue: state.dataParsed[2] }, reconnect: connect, toggleFeed, isWSOpen: isOpen, isLoading: state.isLoading  }
 }

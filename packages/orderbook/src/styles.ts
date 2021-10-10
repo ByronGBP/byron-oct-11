@@ -20,14 +20,32 @@ export const getButtonStyles = () => css`
 
   &:disabled {
     opacity: .4;
+    pointer-events: none;
+    user-select: none;
   }
 `
 
 export const OrderBookStyled = styled.div`
   width: fit-content;
+  position: relative;
   display: grid;
   grid-template: 1fr auto 1fr auto auto/ 1fr;
   background-color: ${theme.colors.background};
+  transition: opacity 300ms ease;
+
+  table, .toggle-feed, .title {
+    transition: opacity 300ms ease;
+  }
+
+  &.loading {
+    opacity: .4;
+  }
+
+  &.ws-close {
+    table, .toggle-feed, .title {
+      opacity: .4;
+    }
+  }
 
   @media (min-width: 768px) { 
     grid-template: 1fr auto auto / 1fr 1fr;
@@ -103,7 +121,7 @@ export const OrderBookStyled = styled.div`
     }
   }
 
-  button {
+  .toggle-feed {
     ${getButtonStyles()}
     grid-area: 5 / 1 / span 1 / span 1;
     justify-self: center;
@@ -111,10 +129,19 @@ export const OrderBookStyled = styled.div`
 
     @media (min-width: 768px) { 
       grid-area: 3 / 1 / span 1 / span 2;
-
-      &:nth-of-type(2) {
-        grid-area: 4 / 1 / span 1 / span 2;
-      }
     }
   }
+`
+
+export const ButtonReconnect = styled.button`
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, 50%);
+    ${getButtonStyles()}
+    z-index: 2;
+
+    &:disabled {
+      opacity: 0;
+    }
 `

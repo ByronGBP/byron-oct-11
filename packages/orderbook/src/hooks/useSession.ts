@@ -1,5 +1,4 @@
 import { useRef, useCallback, useEffect, useState } from 'react'
-import throttle from 'lodash.throttle'
 
 interface Contextable {
   event: 'subscribe' | 'unsubscribe'
@@ -12,7 +11,7 @@ type SessionConnectHandler = (session: WebSocket, e: Event) => any
 type SessionMessageHnalder = (session: WebSocket, ev: MessageEvent<any>) => any
 type SessionDisconnectHandler = (session: WebSocket, e: Event) => any
 type SessionErrorHandler = (session: WebSocket, e: Event) => any
-export type MessageHandler = <T extends Contextable>(args: T) => void
+export type MessageHandler = <T extends Contextable>(args: T, resetBinding?: boolean) => void
 
 interface IOptions {
   onOpen?: SessionConnectHandler | null
@@ -23,9 +22,11 @@ interface IOptions {
 
 type SessionHook = {
   connect: Function
-  close: Function
+  close: Function,
+  bindEvents: Function
   sendMessage : MessageHandler
   isOpen: boolean
+  session: WebSocket | null
 }
 
 const handlerCreatorBind = (session, event, fn, forceRender) => {
@@ -86,8 +87,13 @@ export const useSession = ( url: string, { onOpen, onMessage, onError, onClose }
     bindEvents(session.current)
   }, [])
 
-  const sendMessage = useCallback((message) => {
+  const sendMessage = useCallback((message, resetBinding = false) => {
     console.log('sending message -> ', message, session)
+
+    if (resetBinding) {
+      bindEvents(session.current)
+    }
+
     session.current && session.current.send(JSON.stringify(message))
   }, [])
 
@@ -108,5 +114,5 @@ export const useSession = ( url: string, { onOpen, onMessage, onError, onClose }
     }
   }, [])
 
-  return { connect, sendMessage, close, isOpen: session.current ? session.current?.OPEN === 1 : false }
+  return { connect, sendMessage, close, isOpen: session.current ? session.current?.OPEN === 1 : false, session: session.current, bindEvents }
 }
