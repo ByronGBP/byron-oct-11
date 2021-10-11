@@ -1,84 +1,10 @@
 import { memo, useMemo } from 'react'
-import styled from 'styled-components'
 
-import { useMediaType } from '../lib'
-import { TableData } from '../types'
-import { theme } from '../styles' 
+import { useMediaType } from '../../lib'
+import { TableData, formattedNumber } from '../../hooks/useOrderBookState'
 
 import { BarChart, TableDataChart } from './BarChart'
-
-
-const TableDataWrapper = styled.div`
-  position: relative;
-`
-
-const _TableData = styled.table`
-  border-collapse: separate;
-  border-spacing: 0px;
-
-  thead {
-    display: none;
-
-    @media (min-width: 768px) { 
-      display: table-header-group;
-    }
-  }
-
-  thead tr th {
-    border-bottom: 1px solid rgba(255,255,255, .1); 
-    border-collapse: separate; 
-  } 
-
-  th, td {
-    text-align: right;
-    text-transform: uppercase;
-  }
-
-  td {
-    color: ${theme.colors.white};
-
-    &.price {
-      color: ${theme.colors.green};
-    }
-  }
-
-  
-  td.data, th {
-    font-size: 14px;
-    font-weight: bold;
-    padding: 5px 30px;
-
-    @media (min-width: 768px) { 
-      padding: 5px 55px;
-    }
-  }
-
-  tbody {
-    tr {
-      position:relative;
-      transform:scale(1, 1);
-    }
-  }
-
-  &.reverse {
-    thead {
-      display: table-header-group;
-    }
-
-    th, td {
-
-      @media (min-width: 768px) { 
-        text-align: left;
-      }
-    }
-
-    td.price {
-      color: ${theme.colors.red};
-    }
-  }
-`
-
-const formattedNumber = (num) => num.toLocaleString('en-US', { minimumFractionDigits: 2 })
+import { TableDataWrapper, _TableData } from './TableData.styles'
 
 const ORDER = ['total', 'size', 'price']
 const ORDER_REVERSE = ['price', 'size', 'total']
@@ -110,8 +36,7 @@ interface ITableData {
   className?: string
 }
 
-
-// Error tr dosn't apply position relative on all browser
+// Error tr doesn't apply position relative on all browser
 // https://github.com/w3c/csswg-drafts/issues/1899
 // Patch: create a separate BarChart from the table
 const TableData = memo<ITableData>(({ className = '', data, reverse = false, maxValue }) => {

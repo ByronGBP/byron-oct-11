@@ -157,5 +157,6 @@ playground.tsx
 !/packages/orderbook/src
 !/packages/orderbook/package.json
 !/packages/orderbook/tsconfig.json
+!/packages/orderbook/.babelrc
 
 
