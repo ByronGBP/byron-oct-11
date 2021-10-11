@@ -11,6 +11,7 @@
     "dev": "yarn build:orderbook && yarn workspace @base/client dev",
     "build": "yarn build:orderbook && yarn workspace @base/client build",
     "dev:orderbook": "yarn workspace @base/orderbook dev",
+    "tests:orderbook": "yarn workspace @base/orderbook test",
     "build:orderbook": "yarn workspace @base/orderbook build",
     "add:client": "yarn workspace @base/client add",
     "upgrade:client": "yarn workspace @base/client upgrade",
