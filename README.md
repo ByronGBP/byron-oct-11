@@ -8,8 +8,8 @@ pacakages/
 └── orderbook
 ```
 - Yarn workspace
-- `client` nextjs project where the orderbook component is used
-- `orderbook` react component written in typescript
+- `orderbook` [react component](packages/orderbook/README.md) written in typescript
+- `client` [nextjs](packages/client/README.md) project where the orderbook component is used
 
 ## Scripts
 - run locally the client
