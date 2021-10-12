@@ -158,5 +158,6 @@ playground.tsx
 !/packages/orderbook/package.json
 !/packages/orderbook/tsconfig.json
 !/packages/orderbook/.babelrc
-
-
+!/packages/orderbook/README.md
+!/packages/orderbook/KNOWN_BUGS.md
+!/packages/orderbook/TODOS.md

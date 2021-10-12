@@ -1,4 +1,4 @@
-import { theme } from '../../styles' 
+import { theme } from '../styles' 
 import styled from 'styled-components'
 
 export const TableDataWrapper = styled.div`

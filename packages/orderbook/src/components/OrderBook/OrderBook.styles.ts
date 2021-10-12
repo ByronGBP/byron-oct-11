@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { theme, getButtonStyles } from '../../styles'
+import { theme, getButtonStyles } from '../styles'
 
 export const OrderBookStyled = styled.div`
   width: fit-content;
