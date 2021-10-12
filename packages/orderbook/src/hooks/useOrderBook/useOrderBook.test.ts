@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react-hooks'
 import WS from 'jest-websocket-mock'
 
-import { useOrderBookData } from './useOrderBookData'
+import { useOrderBookData } from './useOrderBook'
 import { MOCK_RAW_DATA } from '../__mocks__'
 
 let ws: WS

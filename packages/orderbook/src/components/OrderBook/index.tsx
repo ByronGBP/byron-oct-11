@@ -1,10 +1,10 @@
 import { OrderBookStyled, ButtonReconnect } from './OrderBook.styles'
-import { useOrderBookData } from '../../hooks'
+import { useOrderBook } from '../../hooks'
 
 import TableData from "../TableData"
 
 export const OrderBook = () => {
-  const { data, reconnect, toggleFeed, isWSOpen, isLoading, currentAsset } = useOrderBookData()
+  const { data, reconnect, toggleFeed, isWSOpen, isLoading, currentAsset } = useOrderBook()
   const { bids, asks, maxValue, spreadValue } = data
 
   return asks.length || bids.length ?

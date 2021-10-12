@@ -24,7 +24,7 @@ const getThrottleTime = (): 5000 | 2000 | 1000 => {
   return logicalProcessors > 6 ? 1000 : logicalProcessors > 3 ? 2000 : 5000
 }
 
-export const useOrderBookData = (url: string = 'wss://www.cryptofacilities.com/ws/v1'): OrderBookHook  => {
+export const useOrderBook = (url: string = 'wss://www.cryptofacilities.com/ws/v1'): OrderBookHook  => {
   const [currentAsset, setAsset] = useState<'BTC' | 'ETH'>('BTC')
   const [isOpen, setOpen] = useState(false)
   const { dispatch, state } = useOrderBookState()
