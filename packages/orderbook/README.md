@@ -23,6 +23,7 @@ orderbook/
 - `components` has all the components UI
 - `hooks` has all the hooks for data & connection management
 - `lib` has external libraries
+- [Architecture](https://docs.google.com/drawings/d/1sXYqlZ3zczdHMx6LAw6rGQ88QQ9i-xH-RHaOrtk686w/edit)
 
 ## Component external libraries
 - `styled-components` to style components
