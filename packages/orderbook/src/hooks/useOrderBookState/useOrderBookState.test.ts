@@ -3,6 +3,8 @@ import { renderHook, act } from '@testing-library/react-hooks'
 import { useOrderBookState, initialState, formattedNumber, checkBaseWithData, getBaseData, parseData, getSpread, getParsedData } from './useOrderBookState'
 import { MOCK_STATE_DATA, MOCK_RAW_DATA, MOCK_MESSAGE_DATA, MOCK_STATE_DATA_MANIPULATED, MOCK_BASE_DATA, MOCK_DATA_PARSED } from '../__mocks__'
 
+jest.setTimeout(30000);
+
 describe('useOrderBookState', () => {
   test('should throw an error if no valid action is sent', () => {
     const { result } = renderHook(() => useOrderBookState())
@@ -38,12 +40,14 @@ describe('useOrderBookState', () => {
     expect(result.current.state).toMatchObject(MOCK_STATE_DATA)
   })
 
-  test('should manipulate current data after message action', () => {
+  test('should manipulate current data after message action', async () => {
     const { result } = renderHook(() => useOrderBookState())
 
     act(() => {
       result.current.dispatch({ type: 'snapshot', data: [MOCK_RAW_DATA, MOCK_RAW_DATA] })
     })
+
+    await new Promise(resolve => setTimeout(resolve, 6000));
 
     act(() => {
       result.current.dispatch({ type: 'message', data: MOCK_MESSAGE_DATA })
@@ -66,7 +70,7 @@ describe('useOrderBookState', () => {
     expect(result.current.state.isLoading).toEqual(true)
   })
 
-  test('should isLoading be false after snapshot', () => {
+  test('should isLoading be true after snapshot', () => {
     const { result } = renderHook(() => useOrderBookState())
 
     act(() => {
@@ -81,7 +85,7 @@ describe('useOrderBookState', () => {
       result.current.dispatch({ type: 'snapshot', data: [MOCK_RAW_DATA, MOCK_RAW_DATA] })
     })
 
-    expect(result.current.state.isLoading).toEqual(false)
+    expect(result.current.state.isLoading).toEqual(true)
   })
 })
 

@@ -1,5 +1,6 @@
 import { useReducer } from 'react'
 import { TableData,  RawData, IBaseData, BaseData, OrderBookState, Action } from './useOrderBookState.types'
+import throttle from 'lodash.throttle'
 
 const InitialData: BaseData = [{}, {}]
 export const initialState: OrderBookState = { data: InitialData, dataParsed: [[], [], ''], maxValue: 0, isLoading: true }
@@ -28,18 +29,29 @@ export const checkBaseWithData = (base: IBaseData, data: RawData[]): IBaseData =
   return newBase
 }
 
-export const getParsedData = (data: BaseData): [TableData[], TableData[], number, string] => {
+const getThrottleTime = (): 5000 | 2000 | 1000 => {
+  const logicalProcessors = typeof window !== 'undefined' ? window.navigator.hardwareConcurrency || 0 : 0
+  return logicalProcessors > 6 ? 1000 : logicalProcessors > 3 ? 2000 : 5000
+}
+
+// To patch bug: isLoading defers with getParsedDataThrottled
+let isLoading = false
+export const getParsedData = (data: BaseData, init = true): [TableData[], TableData[], number, string] => {
   const isMobile = window.innerWidth < 756
   const [bids, asks] = data
+
+  if (!init) {
+    isLoading = false
+  }
 
   const [parsedBids, totalBids] = parseData(bids)
   const [parsedAsks, totalAsks] = parseData(asks, 1)
   const spread = getSpread(parsedBids[0].price, parsedAsks[0].price)
 
-
   return [parsedBids, isMobile ? parsedAsks.reverse() : parsedAsks, Math.max(totalAsks, totalBids), spread]
 }
 
+const getParsedDataThrottled = throttle(getParsedData, getThrottleTime())
 
 export const parseData = (data: IBaseData, sortDirection = 0): [TableData[], number] => {
   let totalSize = 0
@@ -65,17 +77,18 @@ function reducer(state: OrderBookState, action: Action): OrderBookState {
   switch (action.type) {
     case 'snapshot': {
       const baseData = getBaseData(action.data)
-      const [newBids, newAsks, maxValue, spreadValue] = getParsedData(baseData)
+      const [newBids, newAsks, maxValue, spreadValue] = getParsedDataThrottled(baseData)
 
-      return { data: baseData, dataParsed: [newBids, newAsks, spreadValue], maxValue, isLoading: false }
+      return { data: baseData, dataParsed: [newBids, newAsks, spreadValue], maxValue, isLoading }
     }
     case 'message':
       const baseData = getBaseData(action.data, state.data)
 
-      const [newBids, newAsks, maxValue, spreadValue] = getParsedData(baseData)
-      return { ...state, data: baseData, dataParsed: [newBids, newAsks, spreadValue], maxValue }
+      const [newBids, newAsks, maxValue, spreadValue] = getParsedDataThrottled(baseData, false)
+      return { ...state, data: baseData, dataParsed: [newBids, newAsks, spreadValue], maxValue, isLoading }
     case 'sleep':
-      return { ...state, isLoading: true }
+      isLoading = true
+      return { ...state, isLoading }
     default:
       throw new Error()
   }

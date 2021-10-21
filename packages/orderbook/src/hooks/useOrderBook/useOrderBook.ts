@@ -19,11 +19,6 @@ const SWAPPER: ISwapper = {
   'PI_ETHUSD': 'ETH'
 }
 
-const getThrottleTime = (): 5000 | 2000 | 1000 => {
-  const logicalProcessors = window.navigator.hardwareConcurrency || 0
-  return logicalProcessors > 6 ? 1000 : logicalProcessors > 3 ? 2000 : 5000
-}
-
 export const useOrderBook = (url: string = 'wss://www.cryptofacilities.com/ws/v1'): OrderBookHook  => {
   const [currentAsset, setAsset] = useState<'BTC' | 'ETH'>('BTC')
   const [isOpen, setOpen] = useState(false)
@@ -48,16 +43,11 @@ export const useOrderBook = (url: string = 'wss://www.cryptofacilities.com/ws/v1
       isSaveToThrottled = true
       dispatch({ type: 'snapshot', data: [message.bids, message.asks] })
     } else if (isSaveToThrottled && typeof message.product_id === 'string') {
-      const throttleTime = getThrottleTime()
-      const cb = throttle((e) => {
-        const message = JSON.parse(e.data)
+      const message = JSON.parse(e.data)
 
-        if (typeof message.product_id === 'string' && message.product_id === currentCurrency) {
-          dispatch({ type: 'message', data: [message.bids, message.asks] })
-        }
-      }, throttleTime)
-
-      s.onmessage = cb
+      if (typeof message.product_id === 'string' && message.product_id === currentCurrency) {
+        dispatch({ type: 'message', data: [message.bids, message.asks] })
+      }
     }
   }
 
