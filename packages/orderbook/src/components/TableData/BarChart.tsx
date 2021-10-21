@@ -13,7 +13,7 @@ const _Bar = styled(motion.div)<IBar>`
   right: unset;
   bottom: 0;
   left: 0;
-  top: ${({ position }) => position * 27}px;
+  top: ${({ position }) => position * 25}px;
   width: 0;
   background-color: rgba(0, 255 ,0, .1);
 
@@ -47,7 +47,7 @@ const _TableDataChart = styled.div`
   }
 
   .bar {
-    height: 27px;
+    height: 25px;
   }
 
   &.reverse {

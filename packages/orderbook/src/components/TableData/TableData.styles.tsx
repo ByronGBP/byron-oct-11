@@ -37,12 +37,15 @@ export const _TableData = styled.table`
 
   
   td.data, th {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: bold;
     padding: 5px 25px;
-
-    @media (min-width: 768px) { 
+    min-width: 120px;
+      
+    @media (min-width: 768px) {
+      font-size: 14px;
       padding: 5px 35px;
+      min-width: 160px;
     }
   }
 
